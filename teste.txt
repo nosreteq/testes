@@ -1,0 +1,36 @@
+private void CreateLocalMail(MailMessage message)
+ {
+     // Em caso de erro de envio do email, gravar no servidor
+     string baseDir = Path.GetFullPath(Path.Combine(
+         PSE.Framework.Configuration.ApplicationConfiguration.GetApplicationRootDirectory(),
+         "EmailError"));
+
+     if (!Directory.Exists(baseDir))
+         Directory.CreateDirectory(baseDir);
+
+-    string sanitizedLogin = SanitizeFileName(message.To[0].Address);
+-    string fileName = sanitizedLogin + "_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".html";
+-
+-    fileName = Path.GetFileName(fileName);
+-
+-    if (string.IsNullOrWhiteSpace(fileName))
+-        throw new InvalidOperationException("Nome de arquivo invalido apos sanitizacao.");
++    string recipientTag = BuildRecipientTag(message.To[0].Address);
++    string fileName = recipientTag + "_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".html";
+
+     string fullPath = Path.GetFullPath(Path.Combine(baseDir, fileName));
+
+-    if (!fullPath.StartsWith(baseDir + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)
+-        && !string.Equals(fullPath, baseDir, StringComparison.OrdinalIgnoreCase))
+-    {
+-        throw new InvalidOperationException("O caminho do arquivo de fallback de e-mail está fora do diretório permitido.");
+-    }
+-
+     File.WriteAllText(fullPath, message.Body, Encoding.UTF8);
+
+-    DumperLog.WriteTrace("[OtpNotification] - Html do email salvo no diretório 'EmailError'.", TracerType.Level.Mandatory);
++    DumperLog.WriteTrace(
++        "[OtpNotification] - Html do email salvo no diretório 'EmailError'. Destinatário: "
++        + message.To[0].Address + " -> " + fileName,
++        TracerType.Level.Mandatory);
+ }
